@@ -1042,6 +1042,48 @@
   if (location.protocol === 'file:') $('#fileNotice').hidden = false;
 
 
+  // ---------- Installable app ----------
+  // Chrome only offers "Install" when the page has a web app manifest with 192px and 512px icons.
+  // Both are built here from code, so no extra files are needed.
+  (function makeInstallable() {
+    try {
+      const icon = (size, glyph) => {
+        const c = document.createElement('canvas');
+        c.width = c.height = size;
+        const g = c.getContext('2d');
+        g.fillStyle = '#2A4BFF';
+        g.fillRect(0, 0, size, size);
+        g.fillStyle = '#FFFFFF';
+        const s = size * glyph, cx = size / 2 + s * 0.06, cy = size / 2;
+        g.beginPath();
+        g.moveTo(cx - s * 0.36, cy - s / 2);
+        g.lineTo(cx + s * 0.5, cy);
+        g.lineTo(cx - s * 0.36, cy + s / 2);
+        g.closePath();
+        g.fill();
+        return c.toDataURL('image/png');
+      };
+      const manifest = {
+        name: 'Listening desk',
+        short_name: 'Listening',
+        start_url: location.origin + location.pathname,
+        scope: new URL('./', location.href).href,
+        display: 'standalone',
+        background_color: '#0E1017',
+        theme_color: '#2A4BFF',
+        icons: [
+          { src: icon(192, 0.46), sizes: '192x192', type: 'image/png', purpose: 'any' },
+          { src: icon(512, 0.46), sizes: '512x512', type: 'image/png', purpose: 'any' },
+          { src: icon(512, 0.38), sizes: '512x512', type: 'image/png', purpose: 'maskable' }
+        ]
+      };
+      const link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = URL.createObjectURL(new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' }));
+      document.head.appendChild(link);
+    } catch { /* installing is optional; the player works without it */ }
+  })();
+
   // ---------- Boot ----------
   paint(seek);
   setPlayIcon(false);
