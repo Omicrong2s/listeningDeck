@@ -5,21 +5,18 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Listening desk</title>
 <link rel="manifest" href="manifest.webmanifest">
-<meta name="theme-color" media="(prefers-color-scheme: light)" content="#ff6d00">
-<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#090a18">
-<!-- BEFORE (Fails on GitHub Pages subfolders): -->
-<link rel="icon" type="image/png" sizes="32x32" href="/icon-512.png">
-<link rel="icon" type="image/png" sizes="16x16" href="/icon-192.png">
+<meta name="theme-color" id="themeMeta" content="#ff6d00">
 
-<!-- AFTER (Works everywhere): -->
+<!-- Relative paths with cache-busting to ensure icons load properly on GitHub Pages -->
 <link rel="icon" type="image/png" sizes="32x32" href="icon-512.png?v=3">
 <link rel="icon" type="image/png" sizes="16x16" href="icon-192.png?v=3">
+
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* Vibrant Orange and Deep Blue Liquid Glass Palette */
+    /* Light Mode (Default) - Vibrant Orange and Deep Blue Liquid Glass */
     --bg-grad-1: #ff6d00;
     --bg-grad-2: #ff4500;
     --bg: #ff6d00;
@@ -32,11 +29,11 @@
     
     --panel: rgba(255, 255, 255, 0.2);
     --ink: #0000d6;          /* Rich Royal Blue */
-    --ink-light: #ffffff;    /* Crisp White for Contrast */
+    --ink-light: #ffffff;
     --muted: rgba(0, 0, 160, 0.75);
     --line: rgba(255, 255, 255, 0.3);
     --track: rgba(0, 0, 180, 0.15);
-    --accent: #0000d6;       /* Icon Blue */
+    --accent: #0000d6;
     --accent-ink: #ffffff;
     --danger: #b00020;
     --screen: #050614;
@@ -44,27 +41,26 @@
     --ui: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
 
-  @media (prefers-color-scheme: dark) {
-    :root {
-      --bg-grad-1: #0d0f1d;
-      --bg-grad-2: #1c0e00;
-      --bg: #0d0f1d;
-      
-      --glass-bg: rgba(20, 22, 38, 0.55);
-      --glass-bg-hover: rgba(30, 34, 58, 0.75);
-      --glass-border: rgba(255, 109, 0, 0.3);
-      --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
-      
-      --panel: rgba(20, 22, 38, 0.6);
-      --ink: #ff8c38;
-      --ink-light: #f0f2fe;
-      --muted: #b0b8de;
-      --line: rgba(255, 109, 0, 0.2);
-      --track: rgba(255, 109, 0, 0.2);
-      --accent: #ff6d00;      /* Vibrant Orange Accent in Dark Mode */
-      --accent-ink: #0d0f1d;
-      --danger: #ff5252;
-    }
+  /* Dark Mode (Activated via JS toggle or default system preference) */
+  [data-theme="dark"] {
+    --bg-grad-1: #0d0f1d;
+    --bg-grad-2: #1c0e00;
+    --bg: #0d0f1d;
+    
+    --glass-bg: rgba(20, 22, 38, 0.55);
+    --glass-bg-hover: rgba(30, 34, 58, 0.75);
+    --glass-border: rgba(255, 109, 0, 0.3);
+    --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+    
+    --panel: rgba(20, 22, 38, 0.6);
+    --ink: #ff8c38;
+    --ink-light: #f0f2fe;
+    --muted: #b0b8de;
+    --line: rgba(255, 109, 0, 0.2);
+    --track: rgba(255, 109, 0, 0.2);
+    --accent: #ff6d00;      /* Vibrant Orange Accent */
+    --accent-ink: #0d0f1d;
+    --danger: #ff5252;
   }
 
   * { box-sizing: border-box; }
@@ -243,9 +239,7 @@
     backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3); color: var(--ink);
   }
-  @media (prefers-color-scheme: dark) {
-    dialog { background: rgba(18, 20, 32, 0.85); }
-  }
+  [data-theme="dark"] dialog { background: rgba(18, 20, 32, 0.85); }
   dialog::backdrop { background: rgba(5, 6, 12, 0.6); backdrop-filter: blur(4px); }
   dialog h2 { margin: 0 0 8px; font: 700 1.3rem/1.2 var(--display); }
   dialog p, dialog li { color: var(--muted); font-size: 0.925rem; }
@@ -289,6 +283,7 @@
   <header class="top glass-panel">
     <h1 class="brand">Listening desk</h1>
     <div class="top-actions">
+      <button class="btn ghost small" id="themeToggle" type="button"><span id="themeLabel">Dark Mode</span></button>
       <button class="btn ghost small" id="dimBtn" type="button" aria-pressed="false">Dim mode</button>
       <button class="btn ghost small" id="settingsBtn" type="button">Add search key</button>
     </div>
@@ -440,6 +435,41 @@
 (() => {
   'use strict';
 
+  // ---------- Light/Dark Theme Switcher ----------
+  const themeToggle = document.getElementById('themeToggle');
+  const themeLabel = document.getElementById('themeLabel');
+  const themeMeta = document.getElementById('themeMeta');
+
+  const getInitialTheme = () => {
+    const saved = localStorage.getItem('ytm.theme');
+    if (saved) return saved;
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  };
+
+  const applyTheme = (theme) => {
+    if (theme === 'dark') {
+      document.documentElement.setAttribute('data-theme', 'dark');
+      if (themeLabel) themeLabel.textContent = 'Light Mode';
+      if (themeMeta) themeMeta.setAttribute('content', '#090a18');
+    } else {
+      document.documentElement.removeAttribute('data-theme');
+      if (themeLabel) themeLabel.textContent = 'Dark Mode';
+      if (themeMeta) themeMeta.setAttribute('content', '#ff6d00');
+    }
+  };
+
+  let activeTheme = getInitialTheme();
+  applyTheme(activeTheme);
+
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      activeTheme = activeTheme === 'dark' ? 'light' : 'dark';
+      localStorage.setItem('ytm.theme', activeTheme);
+      applyTheme(activeTheme);
+    });
+  }
+
+  // ---------- Application Logic ----------
   const $ = (s) => document.querySelector(s);
   const el = (tag, cls, text) => {
     const n = document.createElement(tag);
@@ -460,7 +490,6 @@
     listAdd: '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M6 3h12a1 1 0 0 1 1 1v17l-7-4-7 4V4a1 1 0 0 1 1-1zm5 4v2H9v2h2v2h2v-2h2V9h-2V7z"/></svg>'
   };
 
-  // ---------- State ----------
   let queue = store.get('ytm.queue', []);
   if (!Array.isArray(queue)) queue = [];
   queue = queue.filter((t) => t && typeof t.id === 'string');
@@ -473,21 +502,20 @@
     .filter((p) => p && typeof p.id === 'string' && typeof p.name === 'string' && Array.isArray(p.tracks))
     .map((p) => ({ id: p.id, name: p.name, tracks: p.tracks.filter((t) => t && typeof t.id === 'string') }));
   let openListId = null;
-  let mode = 'queue';            // 'queue' or 'playlist' (a YouTube playlist link)
+  let mode = 'queue';
   let player = null;
   let ready = false;
-  let pending = false;           // play requested before the player finished loading
+  let pending = false;
   let seeking = false;
   let posTick = 0;
-  let dimOn = false;             // dim mode active
-  let wakeLock = null;           // screen wake lock while dim mode is playing
+  let dimOn = false;
+  let wakeLock = null;
   let idleTimer = null;
 
   const seek = $('#seek');
   const vol = $('#vol');
   const toggleBtn = $('#toggle');
 
-  // ---------- Helpers ----------
   const fmt = (s) => {
     s = Math.max(0, Math.floor(s || 0));
     const h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), sec = s % 60;
@@ -553,7 +581,6 @@
     return b;
   }
 
-  // ---------- Input parsing ----------
   function parseInput(text) {
     const t = text.trim();
     let u;
@@ -583,11 +610,10 @@
         item.title = j.title || '';
         item.channel = j.author_name || '';
       }
-    } catch { /* title is filled in once the track starts */ }
+    } catch { /* title filled dynamically later */ }
     return item;
   }
 
-  // ---------- Playback ----------
   function playIndex(i) {
     if (i < 0 || i >= queue.length) return;
     mode = 'queue';
@@ -645,7 +671,6 @@
     render();
   }
 
-  // ---------- YouTube player ----------
   window.onYouTubeIframeAPIReady = () => {
     const vars = { playsinline: 1, rel: 0, controls: 0 };
     if (location.protocol.startsWith('http')) vars.origin = location.origin;
@@ -736,7 +761,6 @@
     }
   }
 
-  // ---------- Adding and searching ----------
   async function addFromLink({ video, list }) {
     if (video) {
       setMsg('Adding track…');
@@ -796,7 +820,6 @@
     else { persist(); render(); setMsg('Added to the queue.'); }
   }
 
-  // ---------- Playlists ----------
   function createPlaylist(name, tracks = []) {
     const pl = { id: uid(), name: name.trim() || 'Untitled playlist', tracks: tracks.map(cleanTrack) };
     playlists.push(pl);
@@ -881,7 +904,6 @@
     });
   }
 
-  // ---------- Rendering ----------
   function trackButton(t, onPick) {
     const b = el('button', 'pick');
     b.type = 'button';
@@ -1000,7 +1022,6 @@
     $('#settingsBtn').textContent = apiKey ? 'Search key saved' : 'Add search key';
   }
 
-  // ---------- Wiring ----------
   $('#addForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const text = $('#q').value.trim();
@@ -1034,7 +1055,6 @@
     if (ready) player.setVolume(Number(vol.value));
   });
 
-  // Tabs
   $('#tabQueue').addEventListener('click', () => selectTab('queue'));
   $('#tabLists').addEventListener('click', () => selectTab('lists'));
   $('.tabs').addEventListener('keydown', (e) => {
@@ -1044,7 +1064,6 @@
     (toLists ? $('#tabLists') : $('#tabQueue')).focus();
   });
 
-  // Playlists
   $('#newListForm').addEventListener('submit', (e) => {
     e.preventDefault();
     const name = $('#newListName').value.trim();
@@ -1094,7 +1113,6 @@
   });
   $('#nameCancel').addEventListener('click', () => nameDlg.close('cancel'));
 
-  // Settings
   const dlg = $('#settings');
   $('#settingsBtn').addEventListener('click', () => {
     $('#keyInput').value = apiKey;
@@ -1122,7 +1140,6 @@
     togglePlay();
   });
 
-  // ---------- Dim mode ----------
   function dimDefault() {
     return ('wakeLock' in navigator)
       ? 'The screen stays on while music plays.'
@@ -1138,7 +1155,7 @@
   }
 
   function releaseWake() {
-    if (wakeLock) { try { wakeLock.release(); } catch { /* already released */ } wakeLock = null; }
+    if (wakeLock) { try { wakeLock.release(); } catch { /* released */ } wakeLock = null; }
   }
 
   function isPlayingNow() {
@@ -1184,7 +1201,6 @@
     if (document.visibilityState === 'visible' && dimOn) { acquireWake(); syncWake(isPlayingNow()); }
   });
 
-  // Lock-screen controls
   if ('mediaSession' in navigator) {
     const set = (a, fn) => { try { navigator.mediaSession.setActionHandler(a, fn); } catch { /* unsupported */ } };
     set('play', () => { if (ready) player.playVideo(); });
@@ -1199,10 +1215,9 @@
   if (location.protocol === 'file:') $('#fileNotice').hidden = false;
 
   if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
-    navigator.serviceWorker.register('sw.js').catch(() => { /* not critical */ });
+    navigator.serviceWorker.register('sw.js').catch(() => { /* non-critical */ });
   }
 
-  // ---------- Boot ----------
   paint(seek);
   setPlayIcon(false);
   updateSettingsButton();
