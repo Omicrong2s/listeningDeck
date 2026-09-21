@@ -1,6 +1,6 @@
 {
   "name": "Listening desk",
-  "short_name": "Listening",
+  "short_name": "Listening Desk",
   "description": "A personal player for YouTube music with a queue and on-device playlists.",
   "start_url": "./",
   "scope": "./",
