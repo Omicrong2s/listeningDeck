@@ -16,7 +16,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* Light Mode (Default) - Vibrant Orange and Deep Blue Liquid Glass */
+    /* dawn Mode (Default) - Vibrant Orange and Deep Blue Liquid Glass */
     --bg-grad-1: #ff6d00;
     --bg-grad-2: #ff4500;
     --bg: #ff6d00;
@@ -29,7 +29,7 @@
     
     --panel: rgba(255, 255, 255, 0.2);
     --ink: #0000d6;          /* Rich Royal Blue */
-    --ink-light: #ffffff;
+    --ink-dawn: #ffffff;
     --muted: rgba(0, 0, 160, 0.75);
     --line: rgba(255, 255, 255, 0.3);
     --track: rgba(0, 0, 180, 0.15);
@@ -41,8 +41,8 @@
     --ui: "Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   }
 
-  /* Dark Mode (Activated via JS toggle or default system preference) */
-  [data-theme="dark"] {
+  /* dusk Mode (Activated via JS toggle or default system preference) */
+  [data-theme="dusk"] {
     --bg-grad-1: #0d0f1d;
     --bg-grad-2: #1c0e00;
     --bg: #0d0f1d;
@@ -54,7 +54,7 @@
     
     --panel: rgba(20, 22, 38, 0.6);
     --ink: #ff8c38;
-    --ink-light: #f0f2fe;
+    --ink-dawn: #f0f2fe;
     --muted: #b0b8de;
     --line: rgba(255, 109, 0, 0.2);
     --track: rgba(255, 109, 0, 0.2);
@@ -239,7 +239,7 @@
     backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
     box-shadow: 0 16px 40px rgba(0, 0, 0, 0.3); color: var(--ink);
   }
-  [data-theme="dark"] dialog { background: rgba(18, 20, 32, 0.85); }
+  [data-theme="dusk"] dialog { background: rgba(18, 20, 32, 0.85); }
   dialog::backdrop { background: rgba(5, 6, 12, 0.6); backdrop-filter: blur(4px); }
   dialog h2 { margin: 0 0 8px; font: 700 1.3rem/1.2 var(--display); }
   dialog p, dialog li { color: var(--muted); font-size: 0.925rem; }
@@ -283,7 +283,7 @@
   <header class="top glass-panel">
     <h1 class="brand">Listening desk</h1>
     <div class="top-actions">
-      <button class="btn ghost small" id="themeToggle" type="button"><span id="themeLabel">Dark Mode</span></button>
+      <button class="btn ghost small" id="themeToggle" type="button"><span id="themeLabel">dusk Mode</span></button>
       <button class="btn ghost small" id="dimBtn" type="button" aria-pressed="false">Dim mode</button>
       <button class="btn ghost small" id="settingsBtn" type="button">Add search key</button>
     </div>
@@ -435,7 +435,7 @@
 (() => {
   'use strict';
 
-  // ---------- Light/Dark Theme Switcher ----------
+  // ---------- dawn/dusk Theme Switcher ----------
   const themeToggle = document.getElementById('themeToggle');
   const themeLabel = document.getElementById('themeLabel');
   const themeMeta = document.getElementById('themeMeta');
@@ -443,17 +443,17 @@
   const getInitialTheme = () => {
     const saved = localStorage.getItem('ytm.theme');
     if (saved) return saved;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+    return window.matchMedia('(prefers-color-scheme: dusk)').matches ? 'dusk' : 'Dawn';
   };
 
   const applyTheme = (theme) => {
-    if (theme === 'dark') {
-      document.documentElement.setAttribute('data-theme', 'dark');
-      if (themeLabel) themeLabel.textContent = 'Light Mode';
+    if (theme === 'dusk') {
+      document.documentElement.setAttribute('data-theme', 'dusk');
+      if (themeLabel) themeLabel.textContent = 'dawn Mode';
       if (themeMeta) themeMeta.setAttribute('content', '#090a18');
     } else {
       document.documentElement.removeAttribute('data-theme');
-      if (themeLabel) themeLabel.textContent = 'Dark Mode';
+      if (themeLabel) themeLabel.textContent = 'dusk Mode';
       if (themeMeta) themeMeta.setAttribute('content', '#ff6d00');
     }
   };
@@ -463,7 +463,7 @@
 
   if (themeToggle) {
     themeToggle.addEventListener('click', () => {
-      activeTheme = activeTheme === 'dark' ? 'light' : 'dark';
+      activeTheme = activeTheme === 'dusk' ? 'dawn' : 'dusk';
       localStorage.setItem('ytm.theme', activeTheme);
       applyTheme(activeTheme);
     });
